@@ -8,11 +8,9 @@ class GenericEnv(Env):
                     n_agents,
                     action_space_n,
                     obs_space_low, obs_space_high,
-                    # step
-                    # reward
                     ):
 
-        # where we define how the action and observation state will be
+        # where we define how the actions and observation states will be
             # Discrete      -> Discrete(3)
             # Box           -> Box( low=[], high=[] )
 
@@ -22,6 +20,9 @@ class GenericEnv(Env):
         self.action_space_n = action_space_n
         self.obs_space_low = obs_space_low 
         self.obs_space_high = obs_space_high
+
+        # variable that will save if the agents are done, and thus, must not interact with the environment
+        self.dones = [False] * n_agents
 
         # create the action space according to the number of agents
         self.action_space = np.array( [ Discrete( self.action_space_n ) ] * self.n_agents ) 
@@ -36,51 +37,100 @@ class GenericEnv(Env):
         
     
     def step(self, actions):
-        # make sure that there are one action per agent
-        assert len(actions) == self.n_agents, "There are more - or less - actions than expected"
+        '''
+            Function responsible for taking the action
+        '''
         
-        next_states = [ np.array( [random.random() for _ in range(len(self.obs_space_low))] ) for _ in actions ]
+        # make sure that there is one action per agent
+        assert len(actions) == self.n_agents, "There are more - or less - actions than expected"
 
-        next_state = []
-        for action in actions:
-            next_states.append( np.array( [ random.random() for _ in self.obs_space_low ] ) )
-            rewards = self.reward_function( self.states, next_states, actions  )
-            # done = checkDone( next_state )
+        # determine the array that will keep the next state
+        next_states = []
+        
+        # calculate a random state to be the next - temporarily
+        np_obs_low = np.array(self.obs_space_low)
+        np_random = np.array( [random.random() for _ in range(len(self.obs_space_low))] )
+        np_obs_high = np.array( self.obs_space_high )
+        
+        aux_state = [ np_obs_low +  np_random * np_obs_high for _ in self.observation_space ]
 
+        # update the state only if the agent is not done
+        for i, action in enumerate(actions):
+            if self.dones[i] == True:
+                next_states.append( self.states[i] )
+            else:
+                next_states.append( aux_state[i] )
+        
+        # calculate the rewards
+        rewards = self.reward_function( self.states, next_states, actions  )
+        # calculate if the agents are done
+        dones = self.check_done( next_states )
+
+        # additional infos
+        infos = {}
+
+        # update the main states
         self.states = next_states
+        
+        return self.states, rewards, dones, infos
 
-        print(self.states)
-
-        # return self.states, rewards, dones, infos
 
     def render(self):
         pass
 
     
     def reset(self):
-         # put random initial values in the state
+        '''
+            Put random initial values in the state
+        '''
         np_obs_low = np.array(self.obs_space_low)
         np_random = np.array( [random.random() for _ in range(len(self.obs_space_low))] )
         np_obs_high = np.array( self.obs_space_high )
         
         self.states = [ np_obs_low +  np_random * np_obs_high for _ in self.observation_space ]
-        print(self.states)
 
+   
+    def check_done(self, next_states):
+        '''
+            Function for checking if the agent is done
+        '''
+
+        # determine randomly if the agent is done - temporarily
+        
+        for i in range( self.n_agents ):
+            # if the agent is already done, do nothing
+            if self.dones[i]:
+                continue
+            # otherwise, check if it's done
+            self.dones[i] = np.random.choice( [True, False], 1, p=[0.1,0.9] ) 
+
+        return self.dones
 
     
-    def reward(self, current_states, next_states, actions ):
-        pass
-    
+    def reward_function(self, current_states, next_states, actions ):
+        '''
+            Function where all the rewards are going to be assigned, depending on the action and state
+        '''
+        # random rewards - temporarily
+        return [ random.randint(-1,1) for _ in range(self.n_agents) ]
+        
     
     def check_val(self, n_agents, action_space_n, obs_space_low, obs_space_high):
-        # check if the inputs are allowed
+        ''' 
+            Check if the inputs are allowed
+        '''
+        # you have to have at least one agent
         assert (n_agents > 0), "The number of agents must be greater than zero"
+        # and at least one possible action
         assert (action_space_n > 0), "The action space must be greater than zero"
+        # the shapes of obs_space_low and obs_space_high must be equal
+        assert ( np.array( obs_space_low ).shape == np.array( obs_space_high ).shape ), "Make sure that the shape of the maximum observation and minimum are equal"
+
 
 
 if __name__ == '__main__':
-
-    env = GenericEnv( 2, 4, [0,0,0], [100,100,100] )
-    actions = [ action.sample() for action in env.action_space] 
-    env.step( actions )
-    # print( actions )
+    # some tests
+    env = GenericEnv( 4, 4, [0,0, 0], [100,100,100] )
+    while not all( env.dones ):
+        actions = [ action.sample() for action in env.action_space]
+        env.step( actions )
