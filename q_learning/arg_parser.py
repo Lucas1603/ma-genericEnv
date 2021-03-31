@@ -27,7 +27,7 @@ class ArgumentParser:
         self.prs.add_argument("--decay", "-d", type=float, default=1.0, required=False, help="Epsilon decay.\n")
         self.prs.add_argument("--runs", "-r", type=int, default=1, help="Number of runs.\n")
         
-    def getArguments(self):
+    def get_arguments(self):
         """Function responsible for returning all the parsed arguments
 
         Args:
