@@ -9,13 +9,10 @@ def discretize_switch(state):
     for obs in state:
         new_state.append( int(obs[0] * 2) * 7 + round( obs[1]*6 ) )
 
-    print(new_state)
     return new_state
 
 
 if __name__ == '__main__':
-
-
 
     # get the arguments from the command line
     alpha, gamma, epsilon, min_epsilon, decay, runs = ArgumentParser().get_arguments()

@@ -2,6 +2,32 @@ import numpy as np
 
 
 class Agent:
+    """Class that refers to the q-learning agent 
+    
+    Args:
+        state ( list ): The initial state
+        state_space ( Box ): The state space of the environment
+        action_space ( Discrete ): The action space of the environment
+        alpha ( float ): Alpha learning rate
+        gamma ( float ): Gamma discount factor
+        exploration_strategy ( fn ): The exploration strategy
+
+    Methods:
+        chooseAction:
+            Chooses an action according to the exploration strategy.
+            Args:
+                None
+            Returns:
+                int: The chosen action.
+        learn:
+            Does the update on the q-value.
+            Args:
+                next_state ( list ): The state that was transitioned to.
+                reward ( int/float ): The reward got.
+                done (bool)[default: False]: Wheter the agent is done.
+            Returns:
+
+    """
     def __init__( self, 
                   state, 
                   state_space, 
